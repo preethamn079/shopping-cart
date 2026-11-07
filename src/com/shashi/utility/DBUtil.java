@@ -1,3 +1,4 @@
+
 package com.shashi.utility;
 
 import java.sql.Connection;
@@ -8,74 +9,68 @@ import java.sql.SQLException;
 import java.util.ResourceBundle;
 
 public class DBUtil {
-	private static Connection conn;
 
-	public DBUtil() {
-	}
+    private static Connection conn;
 
-	public static Connection provideConnection() {
+    public DBUtil() {
+    }
 
-		try {
-			if (conn == null || conn.isClosed()) {
-				ResourceBundle rb = ResourceBundle.getBundle("application");
-				String connectionString = rb.getString("db.connectionString");
-				String driverName = rb.getString("db.driverName");
-				String username = rb.getString("db.username");
-				String password = rb.getString("db.password");
-				try {
-					Class.forName(driverName);
-				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
-				}
-				conn = DriverManager.getConnection(connectionString, username, password);
+    public static synchronized Connection provideConnection() {
 
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        try {
+            if (conn == null || conn.isClosed()) {
 
-		return conn;
-	}
+                ResourceBundle rb = ResourceBundle.getBundle("application");
 
-	public static void closeConnection(Connection con) {
-		/*
-		 * try { if (con != null && !con.isClosed()) {
-		 * 
-		 * con.close(); } } catch (SQLException e) { // TODO Auto-generated catch block
-		 * e.printStackTrace(); }
-		 */
-	}
+                String connectionString = rb.getString("db.connectionString");
+                String driverName = rb.getString("db.driverName");
+                String username = rb.getString("db.username");
+                String password = rb.getString("db.password");
 
-	public static void closeConnection(ResultSet rs) {
-		try {
-			if (rs != null && !rs.isClosed()) {
-				try {
-					rs.close();
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+                Class.forName(driverName);
 
-	public static void closeConnection(PreparedStatement ps) {
-		try {
-			if (ps != null && !ps.isClosed()) {
-				try {
-					ps.close();
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+                conn = DriverManager.getConnection(
+                    connectionString, username, password
+                );
+            }
+
+            return conn;
+
+        } catch (ClassNotFoundException e) {
+            conn = null;
+            throw new IllegalStateException(
+                "MySQL JDBC driver not found.", e
+            );
+
+        } catch (SQLException e) {
+            conn = null;
+            throw new IllegalStateException(
+                "Unable to establish database connection.", e
+            );
+        }
+    }
+
+    public static void closeConnection(Connection con) {
+        // Connection is shared and reused by the application.
+    }
+
+    public static void closeConnection(ResultSet rs) {
+        try {
+            if (rs != null && !rs.isClosed()) {
+                rs.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void closeConnection(PreparedStatement ps) {
+        try {
+            if (ps != null && !ps.isClosed()) {
+                ps.close();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }
